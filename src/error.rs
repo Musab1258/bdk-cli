@@ -90,6 +90,9 @@ pub enum BDKCliError {
     #[cfg(feature = "cbf")]
     #[error("BDK-Kyoto error: {0}")]
     BuilderError(#[from] bdk_kyoto::builder::BuilderError),
+
+    #[error("Label operation error: {0}")]
+    LabelError(String),
 }
 
 impl From<ExtractTxError> for BDKCliError {
