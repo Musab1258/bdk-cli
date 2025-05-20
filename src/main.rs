@@ -14,6 +14,7 @@ mod commands;
 mod error;
 mod handlers;
 mod utils;
+mod label_manager;
 
 use bdk_wallet::bitcoin::Network;
 use log::{debug, error, warn};
