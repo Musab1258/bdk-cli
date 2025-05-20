@@ -19,6 +19,7 @@ use bdk_wallet::bitcoin::{
     Address, Network, OutPoint, ScriptBuf,
 };
 use clap::{value_parser, Args, Parser, Subcommand, ValueEnum};
+use std::path::PathBuf; // Add this if not already present for PathBuf elsewhere
 
 #[cfg(any(feature = "electrum", feature = "esplora", feature = "rpc"))]
 use crate::utils::parse_proxy_auth;
@@ -35,6 +36,7 @@ use crate::utils::{parse_address, parse_outpoint, parse_recipient};
 /// bdk-cli is also a fully functioning Bitcoin wallet with taproot support!
 ///
 /// For more information checkout <https://bitcoindevkit.org/>
+
 #[derive(PartialEq, Clone, Debug, Parser)]
 #[command(version, about, long_about = None)]
 pub struct CliOpts {
@@ -119,6 +121,53 @@ pub enum WalletSubCommand {
     OnlineWalletSubCommand(OnlineWalletSubCommand),
     #[command(flatten)]
     OfflineWalletSubCommand(OfflineWalletSubCommand),
+    /// Manage wallet labels (BIP-329).
+    Labels {
+        #[command(subcommand)]
+        subcommand: LabelSubCommand,
+    },
+}
+
+#[derive(Debug, Subcommand, Clone, PartialEq, Eq)]
+#[command(rename_all = "snake")]
+pub enum LabelSubCommand {
+    /// Set or update a label for a wallet item.
+    Set {
+        /// The type of item to label.
+        #[arg(long, value_enum)]
+        item_type: LabelItemCliType,
+        /// The reference identifier of the item (e.g., TXID, address, or outpoint string "txid:vout").
+        reference: String,
+        /// The label text. Quotes may be needed for labels with spaces.
+        label: String,
+    },
+    /// List stored labels.
+    List {
+        /// Optional: Filter by item type.
+        #[arg(long, value_enum)]
+        item_type: Option<LabelItemCliType>,
+        /// Optional: Filter by specific reference identifier (partial match).
+        #[arg(long)]
+        reference: Option<String>,
+    },
+    /// Export all labels for the current wallet in BIP-329 JSONL format.
+    Export {
+        /// Optional: File path to export labels to. If not provided, prints to stdout.
+        #[arg(long, short = 'o')]
+        output_file: Option<PathBuf>,
+    },
+    /// Import labels into the current wallet from a BIP-329 JSONL file.
+    Import {
+        /// File path of the BIP-329 JSONL file to import.
+        input_file: PathBuf,
+    },
+}
+
+#[derive(ValueEnum, Clone, Debug, PartialEq, Eq)]
+pub enum LabelItemCliType {
+    Tx,
+    Address,
+    Output,
 }
 
 #[derive(Clone, ValueEnum, Debug, Eq, PartialEq)]
